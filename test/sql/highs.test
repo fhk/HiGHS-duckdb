@@ -1,0 +1,23 @@
+# name: test/sql/highs.test
+# description: test highs extension
+# group: [sql]
+
+# Before we load the extension, this will fail
+statement error
+SELECT highs_version('Sam');
+----
+Catalog Error: Scalar Function with name highs_version does not exist!
+
+# Require statement will ensure this test is run with this extension loaded
+require highs
+
+# Confirm the extension works and HiGHS is integrated
+query I
+SELECT highs_version('Sam') ILIKE 'Hello Sam, HiGHS version:%';
+----
+true
+
+query I
+SELECT highs_openssl_version('Michael') ILIKE 'Hello Michael, HiGHS version:%, OpenSSL version: OpenSSL%';
+----
+true
