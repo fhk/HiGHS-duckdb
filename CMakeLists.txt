@@ -16,6 +16,9 @@ set(DISABLE_PDLP ON CACHE BOOL "Disable PDLP to avoid CUDA dependencies" FORCE)
 # Add compile definition to disable PDLP code
 add_compile_definitions(DISABLE_PDLP)
 
+# Build HiGHS as static library to avoid dynamic linking issues
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build HiGHS as static library" FORCE)
+
 # Add HiGHS subdirectory
 add_subdirectory(submodules/highs)
 
