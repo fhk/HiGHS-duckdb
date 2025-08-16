@@ -780,12 +780,12 @@ static void LoadInternal(DuckDB &db) {
 extern "C" {
 
 DUCKDB_EXTENSION_API void highs_init(duckdb::DatabaseInstance &db) {
-	duckdb::DuckDB db_wrapper(db);
-	duckdb::LoadInternal(db_wrapper);
+  duckdb::DuckDB db_wrapper(db);
+  duckdb::LoadInternal(db_wrapper);
 }
 
 DUCKDB_EXTENSION_API const char *highs_version() {
-	return duckdb::DuckDB::LibraryVersion();
+  return duckdb::DuckDB::LibraryVersion();
 }
 }
 
