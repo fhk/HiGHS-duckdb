@@ -51,51 +51,51 @@ CREATE TABLE coefficients AS SELECT * FROM VALUES
 AS coef(model_name, constraint_name, variable_name, coefficient);
 
 # Test table function calls (these will be placeholders until implementation is complete)
-query II
+query III
 SELECT * FROM highs_create_variables('model1', 'x', 0.0, 1e30, 1.0, 'continuous');
 ----
-x	Variable added to model 'model1'
+x	x_0	SUCCESS
 
-query II
+query III
 SELECT * FROM highs_create_variables('model1', 'y', 1.0, 1e30, 1.0, 'continuous');
 ----
-y	Variable added to model 'model1'
+y	y_1	SUCCESS
 
-query II  
+query III  
 SELECT * FROM highs_create_constraints('model1', 'c1', -1e30, 7.0);
 ----
-c1	Constraint added to model 'model1'
+c1	c1_0	SUCCESS
 
-query II
+query III
 SELECT * FROM highs_create_constraints('model1', 'c2', -1e30, 9.0);
 ----
-c2	Constraint added to model 'model1'
+c2	c2_1	SUCCESS
 
 query IIII
 SELECT * FROM highs_set_coefficients('model1', 'c1', 'x', 1.0);
 ----
-c1	x	1.0	Coefficient set in model 'model1'
+c1	x	1.0	SUCCESS
 
 query IIII
 SELECT * FROM highs_set_coefficients('model1', 'c1', 'y', 2.0);
 ----
-c1	y	2.0	Coefficient set in model 'model1'
+c1	y	2.0	SUCCESS
 
 query IIII
 SELECT * FROM highs_set_coefficients('model1', 'c2', 'x', 3.0);
 ----
-c2	x	3.0	Coefficient set in model 'model1'
+c2	x	3.0	SUCCESS
 
 query IIII
 SELECT * FROM highs_set_coefficients('model1', 'c2', 'y', 1.0);
 ----
-c2	y	1.0	Coefficient set in model 'model1'
+c2	y	1.0	SUCCESS
 
-query IIII
+query IIIII
 SELECT * FROM highs_solve('model1');
 ----
-x	0.6	0.0	Optimal
-y	3.2	0.0	Optimal
+x	x_0	0.0	1.0	Optimal
+y	y_1	1.0	1.0	Optimal
 
 # Clean up test tables
 statement ok
