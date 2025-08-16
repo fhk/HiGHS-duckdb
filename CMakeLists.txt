@@ -8,6 +8,14 @@ set(TARGET_NAME highs)
 # Note that it should also be removed from vcpkg.json to prevent needlessly installing it..
 find_package(OpenSSL REQUIRED)
 
+# Disable PDLP GPU support to avoid CUDA dependencies
+set(CUPDLP_GPU OFF CACHE BOOL "Build pdlp with GPU" FORCE)
+set(CUPDLP_FIND_CUDA OFF CACHE BOOL "Build pdlp with GPU" FORCE)
+# Disable PDLP entirely to avoid CUDA header issues
+set(DISABLE_PDLP ON CACHE BOOL "Disable PDLP to avoid CUDA dependencies" FORCE)
+# Add compile definition to disable PDLP code
+add_compile_definitions(DISABLE_PDLP)
+
 # Add HiGHS subdirectory
 add_subdirectory(submodules/highs)
 

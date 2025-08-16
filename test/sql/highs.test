@@ -21,3 +21,88 @@ query I
 SELECT highs_openssl_version('Michael') ILIKE 'Hello Michael, HiGHS version:%, OpenSSL version: OpenSSL%';
 ----
 true
+
+# Test optimization modeling functions
+# Example: Simple linear programming problem
+# Minimize: x + y  
+# Subject to: x + 2*y <= 7, 3*x + y <= 9, x >= 0, y >= 1
+
+# Step 1: Create variables table
+statement ok
+CREATE TABLE variables AS SELECT * FROM VALUES 
+    ('model1', 'x', 0.0, 1e30, 1.0, 'continuous'),
+    ('model1', 'y', 1.0, 1e30, 1.0, 'continuous')
+AS v(model_name, variable_name, lower_bound, upper_bound, obj_coefficient, var_type);
+
+# Step 2: Create constraints table  
+statement ok
+CREATE TABLE constraints AS SELECT * FROM VALUES
+    ('model1', 'c1', -1e30, 7.0),
+    ('model1', 'c2', -1e30, 9.0)
+AS c(model_name, constraint_name, lower_bound, upper_bound);
+
+# Step 3: Create coefficients table (constraint matrix)
+statement ok  
+CREATE TABLE coefficients AS SELECT * FROM VALUES
+    ('model1', 'c1', 'x', 1.0),
+    ('model1', 'c1', 'y', 2.0),
+    ('model1', 'c2', 'x', 3.0),
+    ('model1', 'c2', 'y', 1.0)
+AS coef(model_name, constraint_name, variable_name, coefficient);
+
+# Test table function calls (these will be placeholders until implementation is complete)
+query II
+SELECT * FROM highs_create_variables('model1', 'x', 0.0, 1e30, 1.0, 'continuous');
+----
+x	Variable added to model 'model1'
+
+query II
+SELECT * FROM highs_create_variables('model1', 'y', 1.0, 1e30, 1.0, 'continuous');
+----
+y	Variable added to model 'model1'
+
+query II  
+SELECT * FROM highs_create_constraints('model1', 'c1', -1e30, 7.0);
+----
+c1	Constraint added to model 'model1'
+
+query II
+SELECT * FROM highs_create_constraints('model1', 'c2', -1e30, 9.0);
+----
+c2	Constraint added to model 'model1'
+
+query IIII
+SELECT * FROM highs_set_coefficients('model1', 'c1', 'x', 1.0);
+----
+c1	x	1.0	Coefficient set in model 'model1'
+
+query IIII
+SELECT * FROM highs_set_coefficients('model1', 'c1', 'y', 2.0);
+----
+c1	y	2.0	Coefficient set in model 'model1'
+
+query IIII
+SELECT * FROM highs_set_coefficients('model1', 'c2', 'x', 3.0);
+----
+c2	x	3.0	Coefficient set in model 'model1'
+
+query IIII
+SELECT * FROM highs_set_coefficients('model1', 'c2', 'y', 1.0);
+----
+c2	y	1.0	Coefficient set in model 'model1'
+
+query IIII
+SELECT * FROM highs_solve('model1');
+----
+x	0.6	0.0	Optimal
+y	3.2	0.0	Optimal
+
+# Clean up test tables
+statement ok
+DROP TABLE variables;
+
+statement ok  
+DROP TABLE constraints;
+
+statement ok
+DROP TABLE coefficients;
