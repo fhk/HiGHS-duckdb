@@ -8,7 +8,7 @@ class ExtensionLoader;
 
 class HighsExtension : public Extension {
 public:
-  void Load(ExtensionLoader &loader) override;
+  void Load(DuckDB &db) override;
   std::string Name() override;
   std::string Version() const override;
 };

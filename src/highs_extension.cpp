@@ -3,6 +3,7 @@
 #include "highs_extension.hpp"
 #include "duckdb.hpp"
 #include "duckdb/common/exception.hpp"
+#include "duckdb/main/extension_util.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/function/scalar_function.hpp"
 #include "duckdb/function/table_function.hpp"
@@ -111,7 +112,7 @@ struct HighsSolveGlobalState : public GlobalTableFunctionState {
 };
 
 // Forward declaration
-void LoadInternal(ExtensionLoader &loader);
+static void LoadInternal(DuckDB &db);
 
 inline void HighsVersionScalarFun(DataChunk &args, ExpressionState &state,
                                   Vector &result) {
@@ -137,7 +138,7 @@ inline void HighsOpenSSLVersionScalarFun(DataChunk &args,
       });
 }
 
-void HighsExtension::Load(ExtensionLoader &loader) { LoadInternal(loader); }
+void HighsExtension::Load(DuckDB &db) { LoadInternal(db); }
 std::string HighsExtension::Name() { return "highs"; }
 
 std::string HighsExtension::Version() const {
@@ -721,17 +722,17 @@ struct HighsSolveFunction {
   }
 };
 
-void LoadInternal(ExtensionLoader &loader) {
+static void LoadInternal(DuckDB &db) {
   // Register HiGHS version functions
   auto highs_version_function =
       ScalarFunction("highs_version", {LogicalType::VARCHAR},
                      LogicalType::VARCHAR, HighsVersionScalarFun);
-  loader.RegisterFunction(highs_version_function);
+  ExtensionUtil::RegisterFunction(*db.instance, highs_version_function);
 
   auto highs_openssl_version_function =
       ScalarFunction("highs_openssl_version", {LogicalType::VARCHAR},
                      LogicalType::VARCHAR, HighsOpenSSLVersionScalarFun);
-  loader.RegisterFunction(highs_openssl_version_function);
+  ExtensionUtil::RegisterFunction(*db.instance, highs_openssl_version_function);
 
   // Register optimization table functions
   // highs_create_variables(model_name, variable_name, lower_bound, upper_bound,
@@ -743,7 +744,7 @@ void LoadInternal(ExtensionLoader &loader) {
       HighsCreateVariablesFunction::CreateVariablesFunction,
       HighsCreateVariablesFunction::CreateVariablesBind,
       HighsCreateVariablesFunction::CreateVariablesInit);
-  loader.RegisterFunction(create_variables_function);
+  ExtensionUtil::RegisterFunction(*db.instance, create_variables_function);
 
   // highs_create_constraints(model_name, constraint_name, lower_bound,
   // upper_bound)
@@ -754,7 +755,7 @@ void LoadInternal(ExtensionLoader &loader) {
       HighsCreateConstraintsFunction::CreateConstraintsFunction,
       HighsCreateConstraintsFunction::CreateConstraintsBind,
       HighsCreateConstraintsFunction::CreateConstraintsInit);
-  loader.RegisterFunction(create_constraints_function);
+  ExtensionUtil::RegisterFunction(*db.instance, create_constraints_function);
 
   // highs_set_coefficients(model_name, constraint_name, variable_name,
   // coefficient)
@@ -765,20 +766,27 @@ void LoadInternal(ExtensionLoader &loader) {
       HighsSetCoefficientsFunction::SetCoefficientsFunction,
       HighsSetCoefficientsFunction::SetCoefficientsBind,
       HighsSetCoefficientsFunction::SetCoefficientsInit);
-  loader.RegisterFunction(set_coefficients_function);
+  ExtensionUtil::RegisterFunction(*db.instance, set_coefficients_function);
 
   // highs_solve(model_name)
   TableFunction solve_function(
       "highs_solve", {LogicalType::VARCHAR}, HighsSolveFunction::SolveFunction,
       HighsSolveFunction::SolveBind, HighsSolveFunction::SolveInit);
-  loader.RegisterFunction(solve_function);
+  ExtensionUtil::RegisterFunction(*db.instance, solve_function);
 }
 
 } // namespace duckdb
 
 extern "C" {
 
-DUCKDB_CPP_EXTENSION_ENTRY(highs, loader) { duckdb::LoadInternal(loader); }
+DUCKDB_EXTENSION_API void highs_init(duckdb::DatabaseInstance &db) {
+	duckdb::DuckDB db_wrapper(db);
+	duckdb::LoadInternal(db_wrapper);
+}
+
+DUCKDB_EXTENSION_API const char *highs_version() {
+	return duckdb::DuckDB::LibraryVersion();
+}
 }
 
 #ifndef DUCKDB_EXTENSION_MAIN
